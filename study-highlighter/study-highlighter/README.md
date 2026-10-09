@@ -1,12 +1,12 @@
-# Marginalia: PDF revision highlighter (pure JavaScript, Gemini)
+# Exam Mate: PDF revision highlighter (pure JavaScript, Gemini)
 
     npm install
     npm start                              # then open http://localhost:3000
 
 Put your settings in a `.env` file in the project folder:
 
-    GEMINI_API_KEYS=key1,key2,key3         # tried in order; when one runs out of quota the next is used
-    GEMINI_MODEL=gemini-3.5-flash          # optional
+    GEMINI_API_KEYS=key1,key2,key3         # set your Gemini API keys here. Multiple keys can be set and each is tried in order when one runs out of requests
+    GEMINI_MODEL=gemini-3.8-flash          # choose the model according to the situation the default is gemini-3.8-flash.
 
 `GEMINI_API_KEY=key` (a single key) still works and can be combined with `GEMINI_API_KEYS`.
 Run `node check-key.js` to test every key.
