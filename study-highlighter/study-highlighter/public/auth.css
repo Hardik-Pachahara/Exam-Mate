@@ -1,0 +1,274 @@
+/* ---- login / sign-up, user bar, admin page ---- */
+#userbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 14px;
+    margin: 0 0 20px;
+    padding: 8px 14px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    font-size: .9rem;
+}
+
+#userbar #who {
+    font-weight: 500;
+    overflow-wrap: anywhere;
+}
+
+#userbar #left {
+    color: var(--muted);
+}
+
+#userbar #adminLink {
+    margin-left: auto;
+    color: #ffd23f;
+}
+
+#userbar #logout {
+    margin-left: 0;
+    padding: 4px 12px;
+}
+
+#userbar #adminLink[hidden] + #logout {
+    margin-left: auto;
+}
+
+#authForm {
+    max-width: 420px;
+    margin: 8px auto 0;
+    display: grid;
+    gap: 16px;
+    padding: 28px 24px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+}
+
+#authForm h2 {
+    margin: 0;
+    font: 600 1.6rem 'Literata', serif;
+}
+
+#authForm input {
+    font: inherit;
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px 14px;
+    width: 100%;
+}
+
+#authForm input:focus-visible {
+    outline: 2px solid #ffd23f;
+    outline-offset: 2px;
+}
+
+#authGo {
+    font: 500 1rem 'DM Sans', sans-serif;
+    color: #15171d;
+    background: #ffd23f;
+    border: 0;
+    border-radius: 8px;
+    padding: 12px 18px;
+    cursor: pointer;
+}
+
+#authGo:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+}
+
+#authGo:focus-visible,
+.link:focus-visible {
+    outline: 2px solid #ffd23f;
+    outline-offset: 2px;
+}
+
+#authForm .switch,
+#authHint {
+    margin: 0;
+    color: var(--muted);
+    font-size: .9rem;
+}
+
+.link {
+    font: inherit;
+    color: #ffd23f;
+    background: none;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+#authMsg {
+    margin: 0;
+    min-height: 1.4em;
+    font-size: .92rem;
+    color: var(--muted);
+}
+
+#authMsg.error {
+    color: #ffb3bb;
+}
+
+#authMsg.ok {
+    color: #9be6c0;
+}
+
+/* admin page */
+.adminwrap {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 24px 6vw 48px;
+}
+
+.adminwrap h2 {
+    font: 600 1.6rem 'Literata', serif;
+    margin: 0 0 4px;
+}
+
+.adminwrap .sub {
+    color: var(--muted);
+    margin: 0 0 20px;
+}
+
+.tablewrap {
+    overflow-x: auto;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+}
+
+table.users {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: .9rem;
+}
+
+table.users th,
+table.users td {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--line);
+    white-space: nowrap;
+}
+
+table.users th {
+    color: var(--muted);
+    font-weight: 500;
+    background: var(--panel);
+}
+
+table.users tr:last-child td {
+    border-bottom: 0;
+}
+
+.tag {
+    display: inline-block;
+    padding: 1px 9px;
+    border-radius: 99px;
+    font-size: .8rem;
+    background: var(--line);
+}
+
+.tag.good { background: #1f3a2d; color: #9be6c0; }
+.tag.wait { background: #3a3320; color: #ffe9a8; }
+.tag.bad { background: #3a1f25; color: #ffb3bb; }
+
+.act {
+    font: inherit;
+    font-size: .85rem;
+    color: var(--text);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 3px 10px;
+    margin-right: 6px;
+    cursor: pointer;
+}
+
+.act.ok { border-color: #2f7a55; color: #9be6c0; }
+.act.danger { border-color: #6b2a35; color: #ffb3bb; }
+
+.act:focus-visible {
+    outline: 2px solid #ffd23f;
+    outline-offset: 2px;
+}
+
+.adminwrap .back {
+    display: inline-block;
+    margin-bottom: 16px;
+    color: #ffd23f;
+}
+
+#adminMsg {
+    color: var(--muted);
+}
+
+#adminMsg.error {
+    color: #ffb3bb;
+}
+
+/* admin dashboard: special accounts + limits */
+.tag.special { background: #2d2347; color: #d9c2ff; }
+.tag.admin { background: #3a3320; color: #ffd23f; }
+.act.gold { border-color: #6b5a22; color: #ffd23f; }
+
+.limits {
+    margin: 0 0 20px;
+    padding: 16px 18px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+}
+
+.limits h3 {
+    margin: 0 0 10px;
+    font: 600 1.05rem 'Literata', serif;
+}
+
+.limitrow {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 22px;
+}
+
+.limitrow label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.limitrow input {
+    width: 84px;
+    font: inherit;
+    color: var(--text);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 6px 10px;
+}
+
+.limitrow input:focus-visible {
+    outline: 2px solid #ffd23f;
+    outline-offset: 2px;
+}
+
+.limitrow span,
+.limits .hint {
+    color: var(--muted);
+    font-size: .88rem;
+}
+
+.limits .hint {
+    margin: 10px 0 0;
+}
+
+.limits .act {
+    padding: 6px 14px;
+    margin: 0;
+}

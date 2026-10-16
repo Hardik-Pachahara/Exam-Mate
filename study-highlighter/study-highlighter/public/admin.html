@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Exam Mate: admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="auth.css">
+</head>
+<body>
+  <div class="adminwrap">
+    <a class="back" href="/">&larr; Back to Exam Mate</a>
+    <h2>Accounts</h2>
+    <p class="sub">Approve new accounts, give trusted people a higher daily limit, or remove accounts. Accounts waiting for approval are listed first.</p>
+    <p id="adminMsg" role="status">Loading...</p>
+
+    <form id="limitsForm" class="limits" hidden>
+      <h3>Daily limits</h3>
+      <div class="limitrow">
+        <label>Normal accounts <input id="limUser" type="number" min="0" max="1000" step="1" required> <span>per day</span></label>
+        <label>Special accounts <input id="limSpecial" type="number" min="0" max="1000" step="1" required> <span>per day</span></label>
+        <button type="submit" class="act ok">Save limits</button>
+      </div>
+      <p class="hint">Admins are always unlimited. Special accounts also skip the per-network limit. A limit of 0 blocks that group completely. Changes apply immediately.</p>
+    </form>
+
+    <div class="tablewrap" id="tableWrap" hidden>
+      <table class="users">
+        <thead><tr><th>Email</th><th>Status</th><th>Type</th><th>Used today</th><th>Signed up</th><th>IP</th><th>Actions</th></tr></thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </div>
+  <script src="admin.js"></script>
+</body>
+</html>

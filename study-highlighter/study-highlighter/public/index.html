@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Exam Mate: revision highlighter</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=DM+Sans:wght@400;500&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="auth.css">
+</head>
+
+<body>
+  <div id="intro" aria-hidden="true">
+    <div class="floor"></div>
+    <div class="wrap">
+      <div class="book">
+        <div class="face back"></div>
+        <div class="face spine"><b>Exam Mate</b></div>
+        <div class="face top"></div>
+        <div class="face bottom"></div>
+        <div class="face edge"></div>
+        <div class="face leaf">
+          <span class="rule r1"></span><span class="rule r2"></span><span class="rule r3"></span>
+          <h2><span class="mark">Exam Mate</span></h2>
+        </div>
+        <div class="cover">
+          <div class="out"><b>Exam Mate</b></div>
+          <div class="in"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <header>
+    <h1>Exam Mate</h1>
+    <p>Upload a chapter. Get it back marked up for revision.</p>
+  </header>
+  <main>
+    <div id="userbar" hidden>
+      <span id="who"></span><span id="left"></span>
+      <a id="adminLink" href="/admin.html" hidden>Admin</a>
+      <button type="button" id="logout" class="ghost">Log out</button>
+    </div>
+    <section id="auth" hidden>
+      <form id="authForm" novalidate>
+        <h2 id="authTitle">Log in</h2>
+        <label class="field"><span class="label">Email</span><input id="authEmail" type="email"
+            autocomplete="email"></label>
+        <label class="field"><span class="label">Password</span><input id="authPass" type="password"
+            autocomplete="current-password"></label>
+        <p id="authHint" hidden>At least 8 characters. We'll email you a link to verify your address, then you wait for
+          approval.</p>
+        <button type="submit" id="authGo">Log in</button>
+        <p class="switch"><span id="authSwitchText">New here?</span> <button type="button" id="authSwitch"
+            class="link">Create an account</button></p>
+        <p id="authMsg" role="status"></p>
+      </form>
+    </section>
+    <section id="upload" hidden>
+      <label id="drop" tabindex="0">
+        <input id="file" type="file" accept="application/pdf" hidden>
+        <strong>Choose a PDF</strong>
+        <span>or drop it here. Scans and photos of pages work too.</span>
+      </label>
+
+      <div id="options" hidden>
+        <p class="file"><strong id="fileName"></strong><span id="pageCount"></span><button type="button" id="change"
+            class="ghost">Change file</button></p>
+
+        <div class="field">
+          <span class="label" id="pagesLabel">Pages to highlight</span>
+          <details id="picker">
+            <summary id="pickerSummary" aria-labelledby="pagesLabel">All pages</summary>
+            <div id="pageList"></div>
+          </details>
+        </div>
+
+        <label class="field">
+          <span class="label">Focus on a topic <em>(optional)</em></span>
+          <input id="topic" type="text" maxlength="300" placeholder="e.g. photosynthesis, or Newton's second law">
+          <small>Only text about this topic will be highlighted.</small>
+        </label>
+
+        <button type="button" id="go">Highlight</button>
+      </div>
+      <div id="loader" hidden aria-hidden="true">
+        <div class="lines"><i></i><i></i><i></i><i></i></div>
+        <p id="loaderText">Reading your pages</p>
+      </div>
+
+      <p id="status" role="status"></p>
+    </section>
+    <section id="result" hidden>
+      <iframe id="viewer" title="Highlighted PDF"></iframe>
+      <aside>
+        <div class="bar"><a id="download" download="highlighted.pdf">Download PDF</a><button id="again">New
+            file</button></div>
+        <ul id="legend"></ul>
+        <div id="notes"></div>
+      </aside>
+    </section>
+  </main>
+  <script src="auth.js"></script>
+  <script src="app.js"></script>
+</body>
+
+</html>
