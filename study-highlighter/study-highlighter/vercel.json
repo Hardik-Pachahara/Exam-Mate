@@ -1,12 +1,20 @@
-{
-  "framework": null,
-  "outputDirectory": "public",
-  "rewrites": [{ "source": "/api/(.*)", "destination": "/api" }],
-  "functions": {
-    "api/index.js": {
-      "maxDuration": 300,
-      "includeFiles": "{eng.traineddata,node_modules/tesseract.js/**,node_modules/tesseract.js-core/**,node_modules/pdfjs-dist/legacy/build/**}"
+  {
+    "framework": null,
+    "outputDirectory": "public",
+    "rewrites": [
+      {
+        "source": "/api/(.*)",
+        "destination": "/api"
+      },
+      {
+        "source": "/outputs/(.*)",
+        "destination": "/api"
+      }
+    ],
+    "functions": {
+      "api/index.js": {
+        "maxDuration": 300,
+        "includeFiles": "{eng.traineddata,node_modules/tesseract.js/**,node_modules/tesseract.js-core/**,node_modules/pdfjs-dist/legacy/build/**}"
+      }
     }
-  },
-  "crons": [{ "path": "/api/cleanup", "schedule": "0 3 * * *" }]
-}
+  }
