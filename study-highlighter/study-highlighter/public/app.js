@@ -179,3 +179,12 @@ function render({ pdfUrl, pages, notice }) {
     ${p.passages.map(x => `<div class="p" style="border-color:${cats[x.category]?.color}">${esc(x.text)}${x.reason ? `<em>${esc(x.reason)}</em>` : ''}</div>`).join('')}</div>`).join('');
   if (notice) element('notes').insertAdjacentHTML('afterbegin', `<p class="notice">${esc(notice)}</p>`);
 }
+// Intro: the book animation lasts about 3 seconds. After it, show the header (title animation) and remove the intro.
+(function () {
+  const intro = document.getElementById('intro');
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const finish = () => { document.body.classList.add('ready'); if (intro) intro.remove(); };
+  if (reduced || !intro) return finish();
+  setTimeout(() => document.body.classList.add('ready'), 2600); // as the intro fades out, the title animates in
+  setTimeout(() => intro.remove(), 3200);
+})();

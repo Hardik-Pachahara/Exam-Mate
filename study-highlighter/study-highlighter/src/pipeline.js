@@ -9,17 +9,6 @@ import { matchPassages, toLineRects } from './matcher.js';
 import { highlightPdf } from './highlighter.js';
 import { AppError } from './errors.js';
 
-// Limits that only apply on Vercel by default (0 = no limit). Change them with MAX_PAGES / MAX_OCR_PAGES in the environment.
-const MAX_PAGES = Number(process.env.MAX_PAGES ?? (process.env.VERCEL ? 80 : 0)) || 0;
-const MAX_OCR_PAGES = Number(process.env.MAX_OCR_PAGES ?? (process.env.VERCEL ? 15 : 0)) || 0;
-
-// Local default: write the finished PDF into the outputs folder and return its address.
-async function saveLocal(id, bytes) {
-  await fs.mkdir('outputs', { recursive: true });
-  await fs.writeFile(`outputs/${id}.pdf`, bytes);
-  return `/outputs/${id}.pdf`;
-}
-
 // "1,3,5" -> [1, 3, 5]. Empty or missing means every page. Invalid numbers are dropped.
 function selectPages(spec, total) {
   if (spec == null || String(spec).trim() === '') return Array.from({ length: total }, (_, i) => i + 1);
@@ -27,12 +16,18 @@ function selectPages(spec, total) {
   return [...new Set(nums)].filter(n => n >= 1 && n <= total).sort((a, b) => a - b);
 }
 
-export async function runPipeline(buffer, id, { pages: pageSpec, topic = '', save } = {}) {
+// Vercel can only write to /tmp; on your own computer results go in the outputs folder. server.js passes outDir.
+// On Vercel a run must finish within the function's time limit, so very long runs are refused politely.
+// Change the limits with MAX_PAGES / MAX_OCR_PAGES in the environment (0 = no limit; the defaults apply on Vercel only).
+const MAX_PAGES = Number(process.env.MAX_PAGES ?? (process.env.VERCEL ? 80 : 0)) || 0;
+const MAX_OCR_PAGES = Number(process.env.MAX_OCR_PAGES ?? (process.env.VERCEL ? 15 : 0)) || 0;
+
+export async function runPipeline(buffer, id, { pages: pageSpec, topic = '', outDir = 'outputs' } = {}) {
   topic = String(topic ?? '').replace(/\s+/g, ' ').trim().slice(0, 300);
   const total = await countPages(buffer);
   const selected = selectPages(pageSpec, total);
   if (!selected.length) throw new AppError('Pick at least one page that exists in this PDF.', { status: 400, kind: 'request' });
-  // On Vercel a run must finish within the function's time limit, so very long runs are refused politely.
+
   if (MAX_PAGES && selected.length > MAX_PAGES) {
     throw new AppError(`Too many pages at once (${selected.length}). Select up to ${MAX_PAGES} pages and run it again.`, { status: 400, kind: 'request' });
   }
@@ -72,6 +67,7 @@ export async function runPipeline(buffer, id, { pages: pageSpec, topic = '', sav
     ? `Nothing about "${topic}" could be highlighted on the selected pages. Try different wording or other pages.`
     : 'No highlights could be placed on this PDF. Try again or use a clearer file.';
 
-  const pdfUrl = await (save ?? saveLocal)(id, await highlightPdf(buffer, pages)); // `save` is given on Vercel (stores it in Blob)
-  return { pdfUrl, pages: pages.map(({ rects, view, rotate, ...rest }) => rest), notice };
+  await fs.mkdir(outDir, { recursive: true });
+  await fs.writeFile(`${outDir}/${id}.pdf`, await highlightPdf(buffer, pages));
+  return { pdfUrl: `/outputs/${id}.pdf`, pages: pages.map(({ rects, view, rotate, ...rest }) => rest), notice };
 }
