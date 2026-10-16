@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+
+# Secrets: never commit these
+.env
+.env.*
+!.env.example
+
+# Generated results and uploads
+outputs/
+*.pdf
+
+# Vercel
+.vercel/
+
+# Logs
+npm-debug.log*
+*.log
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.vscode/
