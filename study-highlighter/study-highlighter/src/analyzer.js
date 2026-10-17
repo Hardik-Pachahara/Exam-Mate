@@ -19,8 +19,28 @@ const busyUntil = new Map();             // model -> time until which it is left
 const BATCH_CHARS = Number(process.env.GEMINI_BATCH_CHARS) || 24000; // about 6k input tokens
 const MAX_PER_PAGE = 20;
 
-const SYSTEM = `Pick detailed highlights for notes making from the pages below: definitions, facts, formulas or rules, suggestions in the text, important names, dates, examples and given explanations of concepts.
-Return at most ${MAX_PER_PAGE} per page. Every "t" must be copied EXACTLY from that page's text, 4 to 15 consecutive words. No explanations. Try to make a highlighted piece of text consistent and in one single piece of text rather than breaking it in multiple parts so the user can read consistently. Also create more number of highlights on a page so all the information is covered without compromising.`;
+const SYSTEM = `You are helping a student make revision notes. For every page below, highlight ALL the information worth revising, so that someone reading only the highlights would still learn the whole page. Do not skip a topic because it seems minor.
+
+WHAT TO HIGHLIGHT (use these categories for "c"):
+- definition: what a term or concept means, including the term being defined.
+- formula: formulas, equations, laws, rules, theorems, steps of a method or procedure, conditions and exceptions.
+- fact: names of people, places, organisations and terms, dates and years, numbers, quantities, units, statistics and results.
+- example: worked examples, case studies, illustrations and analogies the text gives.
+- key_point: everything else that matters: explanations, reasons and causes, effects and consequences, comparisons and differences, classifications and lists of types, advantages and disadvantages, conclusions, warnings, tips and advice the text gives.
+
+COVERAGE:
+- Go through each page from the first line to the last and make sure every important idea, term, number and date on it is covered. Do not stop after the first few paragraphs.
+- Use as many highlights as the page needs, up to ${MAX_PER_PAGE} per page. A page full of content should get many highlights; a page with little content may get only a few. Never return nothing for a page that has real content.
+- Items in a list or bullet points should each be covered, not just the first one.
+
+HOW TO WRITE EACH HIGHLIGHT ("t"):
+- Copy it EXACTLY, word for word, from that page's text, as consecutive words with the same spelling, numbers and symbols. Never reword, shorten with "...", fix spelling or join text from two places.
+- Make each highlight one single readable piece: a full sentence or a full clause that makes sense on its own, normally 5 to 25 words. Do not cut a sentence in the middle just to save space, and do not make several tiny pieces out of one idea.
+- Include the key term together with its meaning, and a number together with what it measures.
+- Do not repeat the same text, and do not let two highlights overlap.
+- Skip headers, footers, page numbers, running titles, figure and table labels, and text that is only an instruction such as "see next page".
+- "p" is the page number from the "=== PAGE n ===" line above the text. A highlight must come from a single page.
+- No explanations or comments, only the highlights.;
 
 const schema = {
   type: 'OBJECT',
