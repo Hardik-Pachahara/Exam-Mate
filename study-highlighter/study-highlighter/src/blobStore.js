@@ -1,12 +1,12 @@
 // Vercel Blob (private store): where uploaded PDFs and finished PDFs live on Vercel.
-// It is switched on only when BLOB_READ_WRITE_TOKEN is set. Locally the app keeps using normal uploads
+// It is switched on only when the store is connected (BLOB_STORE_ID, or BLOB_READ_WRITE_TOKEN). Locally the app keeps using normal uploads
 // and the outputs folder, so nothing changes while you run `npm start` on your own computer.
 //   in/<userId>/...   the PDF a user just uploaded (deleted after a successful run)
 //   out/<userId>/...  the highlighted PDF (opened through a short-lived signed link)
 import { getUser } from './authRoutes.js';
 import { AppError } from './errors.js';
 
-export const enabled = !!process.env.BLOB_READ_WRITE_TOKEN;
+export const enabled = !!(process.env.BLOB_STORE_ID || process.env.BLOB_READ_WRITE_TOKEN);   // either way of connecting a store works
 const MAX_BYTES = 50 * 1024 * 1024;
 const LINK_MS = 2 * 60 * 60 * 1000;                       // a result link works for 2 hours
 const sdk = () => import('@vercel/blob');                  // loaded only when needed
@@ -17,17 +17,35 @@ export const inputPathOk = (p, userId) =>
   typeof p === 'string' && !p.includes('..') && new RegExp(`^in/${Number(userId)}/[A-Za-z0-9._-]+\\.pdf$`).test(p);
 
 // Step 1 of an upload: the browser asks this route for permission, then sends the file straight to Blob.
+// Uses presigned upload URLs, which work with both ways of connecting a store (OIDC or a read-write token).
 export async function uploadRoute(req, res) {
   try {
-    const { handleUpload } = await import('@vercel/blob/client');
-    const json = await handleUpload({
+    const { handleUploadPresigned } = await import('@vercel/blob/client');
+    const { issueSignedToken } = await sdk();
+    const headers = new Headers();
+    for (const [k, v] of Object.entries(req.headers || {})) {
+      if (typeof v === 'string' && !['content-length', 'host', 'connection', 'transfer-encoding'].includes(k)) headers.set(k, v);
+    }
+    const request = new Request(`https://${req.headers?.host || 'localhost'}${req.originalUrl || req.url || '/'}`,
+      { method: 'POST', headers, body: JSON.stringify(req.body ?? {}) });
+    const json = await handleUploadPresigned({
       body: req.body,
-      request: req,
-      onBeforeGenerateToken: async pathname => {
+      request,
+      getSignedToken: async pathname => {
         const u = await getUser(req);                       // same login check as the rest of the app
         if (!u || !u.email_verified || !u.approved) throw new Error('Please log in.');
         if (!inputPathOk(pathname, u.id)) throw new Error('Bad upload path.');
-        return { allowedContentTypes: ['application/pdf'], maximumSizeInBytes: MAX_BYTES, addRandomSuffix: true };
+        const token = await issueSignedToken({
+          pathname, operations: ['put'], allowedContentTypes: ['application/pdf'],
+          maximumSizeInBytes: MAX_BYTES, validUntil: Date.now() + 10 * 60 * 1000
+        });
+        return {
+          token,
+          urlOptions: {
+            allowedContentTypes: ['application/pdf'], maximumSizeInBytes: MAX_BYTES,
+            validUntil: Date.now() + 10 * 60 * 1000, addRandomSuffix: true, allowOverwrite: false
+          }
+        };
       }
     });
     res.json(json);
