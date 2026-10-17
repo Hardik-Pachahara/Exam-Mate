@@ -135,11 +135,13 @@ Admin accounts have no limit. A failed run does not use up an attempt.
 
 | Variable | What it does |
 |---|---|
-| `BLOB_READ_WRITE_TOKEN` | Enables Vercel Blob storage for uploads and results (created when you add a Blob store to the project). Without it, files are handled on local disk. |
+| `BLOB_STORE_ID` | Turns on Vercel Blob storage for uploads and results. Created automatically when you create a **private** Blob store and connect it to the project (leave the prefix blank). Without it, files are handled on local disk. |
+| `BLOB_WEBHOOK_PUBLIC_KEY` | Also created automatically with the store. Not used by this app; leave it. |
+| `BLOB_READ_WRITE_TOKEN` | Optional. Only needed if you tick "Add a read-write token" when creating the store. Not required. |
 | `CRON_SECRET` | Secret that protects the daily cleanup job. Any long random string. |
 | `KEEP_RESULTS_DAYS` | Days to keep result PDFs in Blob. Default `3`. |
 
-Set these in the Vercel project's **Settings, Environment Variables**, not in a file.
+Set `CRON_SECRET` and the other values in the Vercel project's **Settings, Environment Variables**, not in a file. The `BLOB_` variables are added for you when the store is connected.
 
 ### Keep it secret
 
@@ -182,7 +184,7 @@ src/
 1. Push the project to GitHub (without `.env`).
 2. Import the repository in Vercel.
 3. Add your environment variables under **Settings, Environment Variables**. Use the pooled Neon connection string and set `APP_URL` to your Vercel address.
-4. For PDFs larger than about 4 MB, add a Blob store (Storage tab); Vercel functions cannot accept larger uploads directly.
+4. For PDFs larger than about 4 MB, create a private Blob store (Storage tab) and connect it to the project; Vercel functions cannot accept larger uploads directly. Add `CRON_SECRET` so the daily cleanup job can run.
 5. Deploy, sign up on the live site, and make yourself admin. `make-admin.js` needs `DATABASE_URL`, so run it from your computer with the same value in `.env`.
 
 ## Troubleshooting

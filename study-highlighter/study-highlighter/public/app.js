@@ -49,15 +49,45 @@ function reset() {
   show('');
 }
 
+// How the PDF travels. On Vercel it goes straight to Blob storage (a server function cannot accept more than
+// 4.5 MB in one request). On your own computer it is sent to the app as a normal upload.
+let mode = null;
+async function uploadMode() {
+  if (mode) return mode;
+  try { const r = await fetch('/api/upload-config'); mode = r.ok ? await r.json() : { blob: false }; }
+  catch { mode = { blob: false }; }
+  return mode;
+}
+
+// Sends the PDF to Blob once and remembers where it is, so later steps only send its address.
+async function stash(f) {
+  const m = await uploadMode();
+  if (!m.blob) return { file: f };
+  const { uploadPresigned } = await import('https://esm.sh/@vercel/blob@2.8.2/client');
+  const b = await uploadPresigned(`in/${m.userId}/upload.pdf`, f, { access: 'private', handleUploadUrl: '/api/blob-upload', contentType: 'application/pdf' });
+  return { blobPath: b.pathname };
+}
+
+// A request that carries the PDF (or its Blob address) plus extra fields.
+function pdfBody(src, extra = {}) {
+  if (src.blobPath) return { json: JSON.stringify({ blobPath: src.blobPath, ...extra }) };
+  const body = new FormData(); body.append('pdf', src.file);
+  for (const [k, v] of Object.entries(extra)) body.append(k, v);
+  return { body };
+}
+
 // Step 1: pick a PDF, ask the server how many pages it has, then show the options.
 async function choose(f) {
   file.value = ''; // lets you pick the same file again after an error
   if (!f || f.type !== 'application/pdf') return show('Choose a PDF file.', true);
+  show((await uploadMode()).blob ? 'Uploading the PDF...' : 'Reading the PDF...');
+  let src;
+  try { src = await stash(f); }
+  catch { return show('Could not upload the PDF. Check your connection and try again.', true); }
   show('Reading the PDF...');
-  const body = new FormData(); body.append('pdf', f);
-  const data = await post('/api/pages', body);
+  const data = await post('/api/pages', pdfBody(src));
   if (!data) return;
-  pdf = f; total = data.pageCount;
+  pdf = src; total = data.pageCount;
   element('fileName').textContent = f.name;
   element('pageCount').textContent = `${total} page${total === 1 ? '' : 's'}`;
   buildPicker();
@@ -86,15 +116,12 @@ function setLoading(on) {
 async function sendHighlight() {
   const sel = selected();
   if (!pdf || !sel.length || element('go').disabled) return;
-  const topic = element('topic').value.trim();
-  const body = new FormData();
-  body.append('pdf', pdf);
-  if (sel.length < total) body.append('pages', sel.join(',')); // leave out = all pages
-  body.append('topic', topic);
+  const extra = { topic: element('topic').value.trim() };
+  if (sel.length < total) extra.pages = sel.join(','); // leave out = all pages
   element('go').disabled = true;
   setLoading(true);
   show('Reading pages and marking key points. Long chapters can take a few minutes.');
-  const data = await post('/api/highlight', body);
+  const data = await post('/api/highlight', pdfBody(pdf, extra));
   setLoading(false);
   element('go').disabled = !selected().length;
   if (data) render(data);
@@ -113,9 +140,9 @@ async function highlight_by_click() {
   await sendHighlight();
 }
 
-async function post(url, body) {
+async function post(url, { body, json } = {}) {
   let res;
-  try { res = await fetch(url, { method: 'POST', body }); }
+  try { res = await fetch(url, json ? { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: json } : { method: 'POST', body }); }
   catch { show('Cannot reach the app server. Is it still running in the terminal?', true); return null; }
   const data = await res.json().catch(() => ({}));
   if (!res.ok) { show(data.error || 'Something went wrong on the server. Check the terminal.', true); return null; }
