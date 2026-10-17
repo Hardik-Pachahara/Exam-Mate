@@ -40,7 +40,7 @@ HOW TO WRITE EACH HIGHLIGHT ("t"):
 - Do not repeat the same text, and do not let two highlights overlap.
 - Skip headers, footers, page numbers, running titles, figure and table labels, and text that is only an instruction such as "see next page".
 - "p" is the page number from the "=== PAGE n ===" line above the text. A highlight must come from a single page.
-- No explanations or comments, only the highlights.;
+- No explanations or comments, only the highlights.`;
 
 const schema = {
   type: 'OBJECT',
