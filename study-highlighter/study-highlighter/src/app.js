@@ -12,6 +12,7 @@ import { initDb } from './db.js';
 import authRouter, { requireUser, sameOrigin, clientIp } from './authRoutes.js';
 import { reserveRun } from './usage.js';
 import * as blob from './blobStore.js';
+import security from './security.js';
 
 const USE_BLOB = blob.enabled;
 
@@ -21,7 +22,8 @@ export const ensureDb = () => (dbReady ??= initDb().catch(e => { dbReady = undef
 
 const app = express();
 const upload = multer({ limits: { fileSize: 50 * 1024 * 1024 } });
-app.use(express.json());
+app.use(security);                         // safe response headers
+app.use(express.json({ limit: '20kb' })); // real requests are tiny; refuse huge JSON bodies
 app.use(sameOrigin);                       // blocks POSTs started from other websites
 app.use(express.static('public'));         // locally only; on Vercel the public folder is served directly
 app.use('/api', async (req, res, next) => {
