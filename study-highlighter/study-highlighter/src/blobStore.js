@@ -2,13 +2,14 @@
 // It is switched on only when the store is connected (BLOB_STORE_ID, or BLOB_READ_WRITE_TOKEN). Locally the app keeps using normal uploads
 // and the outputs folder, so nothing changes while you run `npm start` on your own computer.
 //   in/<userId>/...   the PDF a user just uploaded (deleted after a successful run)
-//   out/<userId>/...  the highlighted PDF (opened through a short-lived signed link)
+//   out/<userId>/...  the highlighted PDF. The page only ever gets the app's own address /api/result?p=..., which checks the login
+//                     and then hands out a fresh signed Blob link that works for just a few minutes.
 import { getUser } from './authRoutes.js';
 import { AppError } from './errors.js';
 
 export const enabled = !!(process.env.BLOB_STORE_ID || process.env.BLOB_READ_WRITE_TOKEN);   // either way of connecting a store works
 const MAX_BYTES = 50 * 1024 * 1024;
-const LINK_MS = 2 * 60 * 60 * 1000;                       // a result link works for 2 hours
+const LINK_MS = 10 * 60 * 1000;                           // a signed Blob link works for 10 minutes only
 const sdk = () => import('@vercel/blob');                  // loaded only when needed
 const bodyOf = async stream => Buffer.from(await new Response(stream).arrayBuffer());
 
@@ -70,13 +71,33 @@ export async function removeInput(path) {
   try { const { del } = await sdk(); await del(path); } catch (e) { console.error('could not delete upload:', e.message); }
 }
 
-// Stores the finished PDF and returns a signed link the browser can open directly.
+// Stores the finished PDF and returns the app's own address for it. That address needs a login every time it is opened,
+// so copying it (or leaking it) does not give anyone else the file.
 export async function saveOutput(userId, id, bytes) {
-  const { put, issueSignedToken, presignUrl } = await sdk();
+  const { put } = await sdk();
   const b = await put(`out/${Number(userId)}/${id}.pdf`, bytes, { access: 'private', contentType: 'application/pdf', addRandomSuffix: true });
-  const token = await issueSignedToken({ pathname: b.pathname, operations: ['get'], validUntil: Date.now() + LINK_MS });
-  const { presignedUrl } = await presignUrl(token, { operation: 'get', pathname: b.pathname, access: 'private' });
-  return presignedUrl;
+  return `/api/result?p=${encodeURIComponent(b.pathname)}`;
+}
+
+// May this user open this result? Only their own (the admin may open any).
+export const outputPathOk = (p, user) =>
+  typeof p === 'string' && !p.includes('..') &&
+  new RegExp(`^out/${user.role === 'admin' ? '\\d+' : Number(user.id)}/[A-Za-z0-9._-]+\\.pdf$`).test(p);
+
+// GET /api/result?p=out/<id>/<file>.pdf (after the login check): redirects to a fresh, short-lived signed Blob link.
+export async function resultRoute(req, res) {
+  const p = req.query?.p;
+  if (!outputPathOk(p, req.user)) return res.status(404).json({ error: 'Result not found.' });
+  try {
+    const { issueSignedToken, presignUrl } = await sdk();
+    const token = await issueSignedToken({ pathname: p, operations: ['get'], validUntil: Date.now() + LINK_MS });
+    const { presignedUrl } = await presignUrl(token, { operation: 'get', pathname: p, access: 'private' });
+    res.setHeader('Cache-Control', 'no-store');
+    res.redirect(302, presignedUrl);
+  } catch (e) {
+    console.error('result link:', e.message);
+    res.status(500).json({ error: 'Could not open the result. Try again.' });
+  }
 }
 
 // Daily clean-up (Vercel cron): leftover uploads after a day, finished PDFs after a few days.
