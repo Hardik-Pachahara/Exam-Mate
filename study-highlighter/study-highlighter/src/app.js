@@ -36,6 +36,7 @@ app.get('/api/categories', (_, res) => res.json(CATEGORIES));
 // Tells the page how to upload: straight to Blob (Vercel) or through this server (your computer).
 app.get('/api/upload-config', requireUser, (req, res) => res.json({ blob: USE_BLOB, userId: req.user.id }));
 app.post('/api/blob-upload', blob.uploadRoute);
+app.get('/api/result', requireUser, blob.resultRoute);
 
 // Daily clean-up of old uploads and results. Vercel's cron calls it with the CRON_SECRET.
 app.get('/api/cleanup', async (req, res) => {
